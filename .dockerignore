@@ -1,0 +1,12 @@
+# Ignore node_modules from both frontend and backend
+youtube-companion-frontend/node_modules
+youtube-companion-backend/node_modules
+
+# Ignore build folder (if it exists outside of the container)
+
+# Other files to ignore
+.git
+.DS_Store
+
+# Ignore .env files
+youtube-companion-backend/.env
