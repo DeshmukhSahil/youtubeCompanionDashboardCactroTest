@@ -7,7 +7,7 @@ export default function NotesPanel({
   onClear,
   onDelete,
   onEdit,
-  apiBase = 'http://localhost:7000/api'
+  apiBase = '/api'
 }) {
   const [content, setContent] = useState('');
   const [tags, setTags] = useState('');
