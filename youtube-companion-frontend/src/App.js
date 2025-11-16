@@ -44,14 +44,18 @@ function App() {
   }
 
   async function addComment(text) {
-    try {
-      await postComment(text);
-      await loadComments();
-    } catch (err) {
-      console.error('addComment', err);
-      alert('Post failed');
-    }
+  try {
+    await postComment(text);
+    await loadComments();
+    setTimeout(() => {
+      loadComments().catch(e => console.warn('delayed loadComments failed', e));
+    }, 1000);
+  } catch (err) {
+    console.error('addComment', err);
+    alert('Post failed');
   }
+}
+
 
   async function removeComment(id) {
     try {
@@ -83,6 +87,27 @@ function App() {
       console.error('loadNotes', err);
       setNotes([]);
     }
+  }
+
+  function insertReplyLocally(replyPayload) {
+    if (!replyPayload) return;
+    setComments(prev => {
+      const parentId = replyPayload.snippet?.parentId;
+      if (!parentId) return prev;
+
+      return prev.map(thread => {
+        const threadTopId = thread.snippet?.topLevelComment?.id || thread.id;
+        if (threadTopId !== parentId && thread.id !== parentId) return thread;
+
+        const newThread = { ...thread };
+        newThread.replies = newThread.replies ? { ...newThread.replies } : { comments: [] };
+        newThread.replies.comments = [replyPayload, ...(newThread.replies.comments || [])];
+        if (newThread.snippet && typeof newThread.snippet.totalReplyCount === 'number') {
+          newThread.snippet.totalReplyCount = newThread.snippet.totalReplyCount + 1;
+        }
+        return newThread;
+      });
+    });
   }
 
 
@@ -119,7 +144,12 @@ function App() {
           <VideoCard video={video} onPostComment={addComment} onUpdateVideo={handleUpdateVideo}>
             <div className="card-section">
               <div id="commentsWrap" className="comments-section">
-                <CommentsList items={comments} onDelete={removeComment} />
+                <CommentsList
+                  items={comments}
+                  onDelete={removeComment}
+                  onCommentsRefresh={loadComments}
+                  onInsertedReply={insertReplyLocally}
+                />
                 {commentsNotice ? <div id="commentsNotice" className="muted small">{commentsNotice}</div> : null}
               </div>
             </div>
